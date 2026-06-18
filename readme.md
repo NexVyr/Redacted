@@ -43,4 +43,4 @@ curl -fsSL https://raw.githubusercontent.com/YourName/Redacted/main/scripts/run.
 
 ## License
 
-MIT © 2026 Redacted Project
+© 2026 Redacted Project
