@@ -6,23 +6,46 @@ Parses SoC, display, RAM, storage etc from ADB output.
 import re
 from typing import Optional
 
-# Known Snapdragon SoC identifiers
-SNAPDRAGON_MAP = {
-    "SM7325":  "Snapdragon 778G",
-    "SM8450":  "Snapdragon 8 Gen 1",
-    "SM8475":  "Snapdragon 8+ Gen 1",
-    "SM8550":  "Snapdragon 8 Gen 2",
-    "SM8650":  "Snapdragon 8 Gen 3",
-    "SM7450":  "Snapdragon 7 Gen 1",
-    "SM7475":  "Snapdragon 7+ Gen 2",
-    "SM6375":  "Snapdragon 695",
-    "SM6450":  "Snapdragon 6 Gen 1",
-    "SM4450":  "Snapdragon 4 Gen 2",
-    "SDM845":  "Snapdragon 845",
-    "SDM855":  "Snapdragon 855",
-    "SDM865":  "Snapdragon 865",
-    "SM8250":  "Snapdragon 865",
-    "SM8350":  "Snapdragon 888",
+# Known SoC identifiers → (friendly name, vendor)
+SOC_MAP = {
+    # ── Qualcomm Snapdragon ──────────────────────────
+    "SM7325":     ("Snapdragon 778G",       "Qualcomm"),
+    "SM8450":     ("Snapdragon 8 Gen 1",    "Qualcomm"),
+    "SM8475":     ("Snapdragon 8+ Gen 1",   "Qualcomm"),
+    "SM8550":     ("Snapdragon 8 Gen 2",    "Qualcomm"),
+    "SM8650":     ("Snapdragon 8 Gen 3",    "Qualcomm"),
+    "SM8750":     ("Snapdragon 8 Elite",    "Qualcomm"),
+    "SM7450":     ("Snapdragon 7 Gen 1",    "Qualcomm"),
+    "SM7475":     ("Snapdragon 7+ Gen 2",   "Qualcomm"),
+    "SM7550":     ("Snapdragon 7 Gen 2",    "Qualcomm"),
+    "SM7675":     ("Snapdragon 7+ Gen 3",   "Qualcomm"),
+    "SM6375":     ("Snapdragon 695",        "Qualcomm"),
+    "SM6450":     ("Snapdragon 6 Gen 1",    "Qualcomm"),
+    "SM4450":     ("Snapdragon 4 Gen 2",    "Qualcomm"),
+    "SDM845":     ("Snapdragon 845",        "Qualcomm"),
+    "SDM855":     ("Snapdragon 855",        "Qualcomm"),
+    "SDM865":     ("Snapdragon 865",        "Qualcomm"),
+    "SM8250":     ("Snapdragon 865",        "Qualcomm"),
+    "SM8350":     ("Snapdragon 888",        "Qualcomm"),
+    "SM8150":     ("Snapdragon 855",        "Qualcomm"),
+    # ── Google Tensor ────────────────────────────────
+    "ZUMA":       ("Tensor G3",             "Google"),
+    "ZUMAPRO":    ("Tensor G3 Pro",         "Google"),
+    "RIPCURRENT": ("Tensor G2",             "Google"),
+    "GS201":      ("Tensor G2",             "Google"),
+    "GS101":      ("Tensor G1",             "Google"),
+    # ── MediaTek ─────────────────────────────────────
+    "MT6895":     ("Dimensity 8100",        "MediaTek"),
+    "MT6897":     ("Dimensity 8200",        "MediaTek"),
+    "MT6983":     ("Dimensity 9000",        "MediaTek"),
+    "MT6985":     ("Dimensity 9200",        "MediaTek"),
+    "MT6989":     ("Dimensity 9300",        "MediaTek"),
+    "MT6878":     ("Dimensity 7050",        "MediaTek"),
+    # ── Samsung Exynos ───────────────────────────────
+    "S5E9925":    ("Exynos 2200",           "Samsung"),
+    "S5E9935":    ("Exynos 2400",           "Samsung"),
+    "EXYNOS2200": ("Exynos 2200",           "Samsung"),
+    "EXYNOS2400": ("Exynos 2400",           "Samsung"),
 }
 
 class DeviceParser:
@@ -32,32 +55,42 @@ class DeviceParser:
 
     def detect_soc(self, props: dict) -> dict:
         """Detect SoC from device properties."""
-        platform = props.get("ro.board.platform", "").upper()
-        hardware = props.get("ro.hardware", "").upper()
-        product  = props.get("ro.product.board", "").upper()
+        candidates = [
+            props.get("ro.board.platform", ""),
+            props.get("ro.hardware", ""),
+            props.get("ro.product.board", ""),
+            props.get("ro.chipname", ""),
+            props.get("ro.soc.model", ""),
+        ]
 
-        soc_id   = platform or hardware or product
-        soc_name = ""
+        soc_id = soc_name = ""
+        soc_vendor = "Unknown"
 
-        for key, name in SNAPDRAGON_MAP.items():
-            if key in soc_id:
-                soc_name = name
-                soc_id   = key
+        for candidate in candidates:
+            if not candidate:
+                continue
+            up = candidate.upper()
+            for key, (name, vendor) in SOC_MAP.items():
+                if key in up:
+                    soc_id, soc_name, soc_vendor = key, name, vendor
+                    break
+            if soc_name:
                 break
 
-        # CPU core count from /proc/cpuinfo
+        if not soc_id:
+            soc_id = next((c for c in candidates if c), "Unknown")
+
         stdout, _, _ = self.adb.adb("shell", "cat", "/proc/cpuinfo")
         cores = len(re.findall(r'^processor\s*:', stdout, re.M))
 
-        # CPU frequencies
         freqs = []
-        for i in range(cores):
-            freq_stdout, _, rc = self.adb.adb(
+        for i in range(min(cores, 9)):
+            freq_out, _, rc = self.adb.adb(
                 "shell",
                 f"cat /sys/devices/system/cpu/cpu{i}/cpufreq/cpuinfo_max_freq"
             )
-            if rc == 0 and freq_stdout.strip().isdigit():
-                freqs.append(int(freq_stdout.strip()) // 1000)  # MHz
+            if rc == 0 and freq_out.strip().isdigit():
+                freqs.append(int(freq_out.strip()) // 1000)
 
         max_freq = max(freqs) if freqs else 0
 
@@ -66,7 +99,7 @@ class DeviceParser:
             "name":     soc_name or soc_id,
             "cores":    cores,
             "max_freq": f"{max_freq} MHz" if max_freq else "Unknown",
-            "vendor":   "Qualcomm" if soc_name else "Unknown",
+            "vendor":   soc_vendor,
         }
 
     def detect_display(self, props: dict) -> dict:

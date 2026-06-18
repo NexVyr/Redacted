@@ -139,6 +139,15 @@ class ADBManager:
                 props[match.group(1)] = match.group(2)
         return props
 
+    def _get_selinux(self) -> str:
+        """Get SELinux enforcement status."""
+        stdout, _, rc = self.adb("shell", "getenforce")
+        if rc == 0 and stdout.strip():
+            return stdout.strip()
+        # Fallback via getprop
+        stdout, _, _ = self.adb("shell", "getprop", "ro.boot.selinux")
+        return stdout.strip() or "Unknown"
+
     def get_device_info(self) -> dict:
         """Get comprehensive device information."""
         props = self.get_all_props()
@@ -188,7 +197,7 @@ class ADBManager:
             "ram":         total_ram,
             "storage":     storage,
             "bootloader":  "Locked" if bootloader_locked else "Unlocked",
-            "selinux":     props.get("ro.build.selinux", "Unknown"),
+            "selinux":     self._get_selinux(),
             "serial":      props.get("ro.serialno", "REDACTED"),
             "android_id":  "REDACTED",
             "imei":        "REDACTED",
