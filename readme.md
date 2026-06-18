@@ -9,12 +9,12 @@
 
 **Windows:**
 ```powershell
-irm https://raw.githubusercontent.com/YourName/Redacted/main/scripts/run.ps1 | iex
+irm https://raw.githubusercontent.com/NexVyr/Redacted/main/scripts/run.ps1 | iex
 ```
 
 **Linux / macOS:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YourName/Redacted/main/scripts/run.sh | bash
+curl -fsSL https://raw.githubusercontent.com/NexVyr/Redacted/main/scripts/run.sh | bash
 ```
 
 ---
