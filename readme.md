@@ -15,7 +15,6 @@ https://discord.gg/MV4PZprXDB
 **Windows:**
 ```powershell
 irm https://raw.githubusercontent.com/NexVyr/Redacted/main/scripts/run.ps1 | iex
-```## Quick Start
 
 ```
 
