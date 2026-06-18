@@ -54,22 +54,48 @@ Write-Host "[+] Dependencies ready" -ForegroundColor Green
 
 # ── Check ADB ───────────────────────────────────────────────────
 Write-Host "[*] Checking ADB..." -ForegroundColor Gray
-if (-not (Get-Command adb -ErrorAction SilentlyContinue)) {
+
+$ptDir    = "$installDir\resources"
+$adbLocal = "$ptDir\platform-tools\adb.exe"
+
+# Check: ADB in PATH or already downloaded locally
+$adbInPath  = Get-Command adb -ErrorAction SilentlyContinue
+$adbExists  = Test-Path $adbLocal
+
+if ($adbInPath) {
+    Write-Host "[+] ADB found in PATH" -ForegroundColor Green
+    
+} elseif ($adbExists) {
+    # Already downloaded - just add to PATH, don't re-download
+    Write-Host "[+] ADB already downloaded - skipping" -ForegroundColor Green
+    $env:PATH += ";$ptDir\platform-tools"
+    
+} else {
+    # First time - download platform-tools
     Write-Host "[!] ADB not found." -ForegroundColor Yellow
     Write-Host "    Downloading platform-tools..." -ForegroundColor Gray
 
-    $ptUrl  = "https://dl.google.com/android/repository/platform-tools-latest-windows.zip"
-    $ptZip  = "$env:TEMP\platform-tools.zip"
-    $ptDir  = "$installDir\resources"
+    $ptUrl = "https://dl.google.com/android/repository/platform-tools-latest-windows.zip"
+    $ptZip = "$env:TEMP\platform-tools-redacted.zip"
 
+    New-Item -ItemType Directory -Force -Path $ptDir | Out-Null
     Invoke-WebRequest $ptUrl -OutFile $ptZip -UseBasicParsing
-    Expand-Archive $ptZip -DestinationPath $ptDir -Force
-    Remove-Item $ptZip
+
+    # Extract without -Force to avoid overwrite errors on locked files
+    try {
+        Expand-Archive $ptZip -DestinationPath $ptDir -Force
+    } catch {
+        # If -Force fails (file in use), try without it
+        Expand-Archive $ptZip -DestinationPath $ptDir
+    }
+
+    # Clean up zip only (never touch the extracted files)
+    if (Test-Path $ptZip) {
+        Remove-Item $ptZip -ErrorAction SilentlyContinue
+    }
 
     $env:PATH += ";$ptDir\platform-tools"
     Write-Host "[+] ADB installed" -ForegroundColor Green
-} else {
-    Write-Host "[+] ADB found" -ForegroundColor Green
 }
 
 # ── Launch Redacted ─────────────────────────────────────────────
