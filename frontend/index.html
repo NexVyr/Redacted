@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REDACTED</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0f1117;
+      --surface:      #1a1d27;
+      --surface2:     #21253a;
+      --border:       #2a2f45;
+      --accent1:      #1e90ff;
+      --accent2:      #0a3d7a;
+      --gray:         #606878;
+      --gray-light:   #9aa0b4;
+      --text:         #e2e8f0;
+      --text-dim:     #6b7280;
+      --green:        #00c853;
+      --yellow:       #ffc107;
+      --red:          #ff4444;
+      --font-mono:    'Consolas', 'Courier New', monospace;
+      --font-ui:      'Segoe UI', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    /* ── Layout ───────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────── */
+    #header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    #header .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    #header .logo-text {
+      font-family: var(--font-mono);
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: 4px;
+      color: var(--accent1);
+      text-shadow: 0 0 20px #1e90ff44;
+    }
+
+    #header .logo-version {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--gray);
+      letter-spacing: 3px;
+    }
+
+    #header .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #device-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--gray-light);
+      letter-spacing: 1px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red);
+      transition: all 0.3s;
+    }
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.warning   { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+
+    #header .links a {
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    #header .links a:hover { color: var(--accent1); }
+    #header .links span { color: var(--border); margin: 0 8px; }
+
+    /* ── Tabs ─────────────────────────────────────── */
+    #tabs {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--gray);
+      padding: 12px 20px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: var(--gray-light); }
+    .tab.active {
+      color: var(--accent1);
+      border-bottom-color: var(--accent1);
+    }
+
+    /* ── Content ──────────────────────────────────── */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    /* ── Tab Panels ───────────────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Shared Components ────────────────────────── */
+    .section-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--accent1);
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #0a3d7a33;
+      border: 1px solid var(--accent2);
+      color: var(--accent1);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+    }
+    .tag.green { background: #00c85322; border-color: var(--green); color: var(--green); }
+    .tag.red   { background: #ff444422; border-color: var(--red);   color: var(--red);   }
+    .tag.gray  { background: #60687822; border-color: var(--gray);  color: var(--gray);  }
+
+    .redacted-bar {
+      display: inline-block;
+      height: 12px;
+      background: var(--accent2);
+      border-radius: 2px;
+      vertical-align: middle;
+    }
+
+    /* Loading spinner */
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gray-light);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 40px 0;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent1);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error state */
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 0;
+      gap: 12px;
+      color: var(--gray);
+    }
+    .error-state .icon { font-size: 40px; }
+    .error-state p { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; }
+
+    /* ── Device Tab ───────────────────────────────── */
+    #device-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    #device-icon {
+      width: 48px; height: 48px;
+      border-radius: 8px;
+      background: #0a3d7a44;
+      border: 2px solid var(--accent1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .info-grid {
+      display: grid;
+      gap: 2px;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 6px;
+      gap: 16px;
+      transition: background 0.1s;
+    }
+    .info-row:nth-child(even) { background: var(--surface); }
+    .info-row:hover { background: var(--surface2); }
+
+    .info-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--accent1);
+      min-width: 110px;
+      opacity: 0.8;
+    }
+
+    .info-value {
+      color: var(--text);
+      font-size: 13px;
+      flex: 1;
+    }
+    .info-value.mono { font-family: var(--font-mono); }
+
+    /* ── Drivers Tab ──────────────────────────────── */
+    #drivers-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      background: var(--accent2);
+      border: 1px solid var(--accent1);
+      color: var(--accent1);
+      border-radius: 6px;
+      padding: 7px 16px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--accent1); color: #fff; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.danger { border-color: var(--red); color: var(--red); }
+    .btn.danger:hover { background: var(--red); color: #fff; }
+
+    .driver-row {
+      display: flex;
+      align-items: center;
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      gap: 12px;
+      margin-bottom: 4px;
+      transition: border-color 0.2s;
+    }
+    .driver-row:hover { border-color: var(--accent2); }
+    .driver-row.missing { border-color: #ff444422; }
+
+    .driver-name {
+      font-family: var(--font-mono);
+      color: var(--text);
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .driver-status {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .driver-status.loaded  { color: var(--green); }
+    .driver-status.missing { color: var(--red); }
+
+    /* ── Boot Tab ─────────────────────────────────── */
+    .timeline {
+      position: relative;
+      padding-left: 90px;
+    }
+
+    .timeline-line {
+      position: absolute;
+      left: 77px; top: 0; bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-event {
+      display: flex;
+      align-items: center;
+      padding: 7px 0;
+      gap: 16px;
+      position: relative;
+    }
+
+    .timeline-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent1);
+      width: 90px;
+      text-align: right;
+      position: absolute;
+      left: -90px;
+      opacity: 0.7;
+    }
+
+    .timeline-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      flex-shrink: 0;
+      position: absolute;
+      left: -5px;
+    }
+    .timeline-dot.warning { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+    .timeline-dot.error   { background: var(--red);    box-shadow: 0 0 8px var(--red); }
+
+    .timeline-label { color: var(--text); font-size: 13px; }
+    .timeline-detail {
+      color: var(--gray);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    /* ── Terminal Tab ─────────────────────────────── */
+    #terminal-wrap {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 200px);
+    }
+
+    #terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      background: #0a0c12;
+      border: 1px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .term-line { margin-bottom: 2px; }
+    .term-line.system  { color: var(--accent1); }
+    .term-line.cmd     { color: var(--green); }
+    .term-line.output  { color: var(--gray-light); }
+    .term-line.error   { color: var(--red); }
+
+    #terminal-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #0a0c12;
+      border: 1px solid var(--accent2);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 8px 12px;
+      gap: 8px;
+    }
+
+    #terminal-input-wrap span {
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    #terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    /* ── Partitions Tab ───────────────────────────── */
+    .partition-row {
+      display: flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 6px;
+      gap: 16px;
+    }
+    .partition-row:nth-child(even) { background: var(--surface); }
+    .partition-name {
+      font-family: var(--font-mono);
+      color: var(--accent1);
+      min-width: 140px;
+      font-size: 12px;
+    }
+    .partition-target {
+      color: var(--gray-light);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    /* ── Footer ───────────────────────────────────── */
+    #footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #footer span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* ── Scrollbar ────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gray); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div id="header">
+    <div class="logo">
+      <span class="logo-text">██████████</span>
+      <span class="logo-version">REDACTED v0.1</span>
+    </div>
+    <div class="header-right">
+      <div id="device-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">SCANNING...</span>
+      </div>
+      <div class="links">
+        <a href="https://github.com" target="_blank">GITHUB</a>
+        <span>|</span>
+        <a href="https://discord.com" target="_blank">DISCORD</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div id="tabs">
+    <button class="tab active" data-tab="device">DEVICE</button>
+    <button class="tab" data-tab="drivers">DRIVERS</button>
+    <button class="tab" data-tab="boot">BOOT</button>
+    <button class="tab" data-tab="partitions">PARTITIONS</button>
+    <button class="tab" data-tab="terminal">TERMINAL</button>
+    <button class="tab" data-tab="settings">SETTINGS</button>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- Device Tab -->
+    <div class="panel active" id="panel-device">
+      <div id="device-loading" class="loading">
+        <div class="spinner"></div> SCANNING DEVICE...
+      </div>
+      <div id="device-content" style="display:none">
+        <div id="device-header">
+          <div id="device-icon">📱</div>
+          <div>
+            <div id="device-name" style="font-weight:700;font-size:18px;color:var(--text)"></div>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+              <span class="status-dot connected"></span>
+              <span style="color:var(--gray-light);font-size:13px" id="device-mode-label">Connected via ADB</span>
+              <span class="tag" id="device-mode-tag">ADB</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-grid" id="device-info-grid"></div>
+      </div>
+      <div id="device-error" class="error-state" style="display:none">
+        <div class="icon">🔌</div>
+        <p>NO DEVICE CONNECTED</p>
+        <p style="color:var(--gray);margin-top:4px;font-size:11px">Connect a device via USB with ADB enabled</p>
+      </div>
+    </div>
+
+    <!-- Drivers Tab -->
+    <div class="panel" id="panel-drivers">
+      <div id="drivers-loading" class="loading">
+        <div class="spinner"></div> LOADING DRIVERS...
+      </div>
+      <div id="drivers-content" style="display:none">
+        <div id="drivers-header">
+          <span id="drivers-count" style="color:var(--gray-light);font-size:13px"></span>
+          <button class="btn" id="btn-backup-drivers">EXPORT BACKUP.ZIP</button>
+        </div>
+        <div id="drivers-list"></div>
+      </div>
+    </div>
+
+    <!-- Boot Tab -->
+    <div class="panel" id="panel-boot">
+      <div id="boot-loading" class="loading">
+        <div class="spinner"></div> PARSING BOOT SEQUENCE...
+      </div>
+      <div id="boot-content" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;gap:32px">
+            <div>
+              <div style="color:var(--gray);font-size:11px;font-family:var(--font-mono);letter-spacing:2px">BOOT TIME</div>
+              <div id="boot-total-time" style="font-size:24px;font-weight:700;color:var(--accent1);font-family:var(--font-mono);margin-top:4px"></div>
+            </div>
+            <div>
+              <div style="color:var(--gray);font-size:11px;font-family:var(--font-mono);letter-spacing:2px">EVENTS</div>
+              <div id="boot-event-count" style="font-size:24px;font-weight:700;color:var(--text);font-family:var(--font-mono);margin-top:4px"></div>
+            </div>
+            <div>
+              <div style="color:var(--gray);font-size:11px;font-family:var(--font-mono);letter-spacing:2px">ERRORS</div>
+              <div id="boot-error-count" style="font-size:24px;font-weight:700;color:var(--red);font-family:var(--font-mono);margin-top:4px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-line"></div>
+          <div id="boot-timeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partitions Tab -->
+    <div class="panel" id="panel-partitions">
+      <div id="partitions-loading" class="loading">
+        <div class="spinner"></div> READING PARTITION TABLE...
+      </div>
+      <div id="partitions-content" style="display:none">
+        <div class="section-title" id="partitions-count"></div>
+        <div id="partitions-list"></div>
+      </div>
+    </div>
+
+    <!-- Terminal Tab -->
+    <div class="panel" id="panel-terminal">
+      <div id="terminal-wrap">
+        <div id="terminal-output">
+          <div class="term-line system"># Redacted Terminal v0.1</div>
+          <div class="term-line system"># Type ADB commands below</div>
+          <div class="term-line system"># ─────────────────────────</div>
+        </div>
+        <div id="terminal-input-wrap">
+          <span>$</span>
+          <input id="terminal-input" type="text" placeholder="adb shell command..." autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="panel" id="panel-settings">
+      <div class="card">
+        <div class="section-title">DEVICE CONTROL</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn" onclick="reboot('normal')">REBOOT</button>
+          <button class="btn" onclick="reboot('recovery')">REBOOT RECOVERY</button>
+          <button class="btn" onclick="reboot('fastboot')">REBOOT FASTBOOT</button>
+          <button class="btn danger" onclick="confirmWipe()">WIPE DATA</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">ABOUT REDACTED</div>
+        <div class="info-grid" style="margin-top:8px">
+          <div class="info-row">
+            <span class="info-label">VERSION</span>
+            <span class="info-value mono">v0.1</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">PLATFORM</span>
+            <span class="info-value mono">Snapdragon Edition</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">LICENSE</span>
+            <span class="info-value mono">MIT © 2026</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">BACKEND</span>
+            <span class="info-value mono" id="settings-backend-status">checking...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Footer -->
+  <div id="footer">
+    <span>REDACTED © 2026</span>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  const API = 'http://localhost:9420';
+
+  // ── API helpers ─────────────────────────────────────────────
+  async function api(endpoint, method = 'GET', body = null) {
+    try {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res  = await fetch(API + endpoint, opts);
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ── Tab switching ────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+      // Load data for active tab
+      loadTab(tab.dataset.tab);
+    });
+  });
+
+  // ── Device status polling ────────────────────────────────────
+  let currentDevice = null;
+
+  async function pollDevices() {
+    const data = await api('/api/devices');
+    const dot  = document.getElementById('status-dot');
+    const txt  = document.getElementById('status-text');
+
+    if (!data || (!data.adb?.length && !data.fastboot?.length)) {
+      dot.className = 'status-dot';
+      txt.textContent = 'NO DEVICE';
+      currentDevice = null;
+    } else {
+      dot.className = 'status-dot connected';
+      const dev = data.adb?.[0] || data.fastboot?.[0];
+      currentDevice = dev;
+      txt.textContent = dev.model
+        ? dev.model.toUpperCase()
+        : dev.serial.substring(0, 12).toUpperCase();
+    }
+  }
+
+  // ── Load tab data ────────────────────────────────────────────
+  const loaded = {};
+
+  async function loadTab(tab) {
+    if (loaded[tab]) return;
+    switch (tab) {
+      case 'device':     await loadDevice();     break;
+      case 'drivers':    await loadDrivers();    break;
+      case 'boot':       await loadBoot();       break;
+      case 'partitions': await loadPartitions(); break;
+      case 'settings':   loadSettings();         break;
+    }
+  }
+
+  // ── Device Tab ───────────────────────────────────────────────
+  async function loadDevice() {
+    const loading = document.getElementById('device-loading');
+    const content = document.getElementById('device-content');
+    const error   = document.getElementById('device-error');
+
+    const data = await api('/api/device/info');
+
+    loading.style.display = 'none';
+
+    if (!data.success) {
+      error.style.display = 'flex';
+      return;
+    }
+
+    const d = data.data;
+    document.getElementById('device-name').textContent =
+      d.brand + ' ' + d.model;
+
+    const rows = [
+      { label: 'MODEL',       value: d.model,      tag: d.codename },
+      { label: 'BRAND',       value: d.brand },
+      { label: 'SoC',         value: d.soc,        tag: 'Qualcomm' },
+      { label: 'CPU CORES',   value: d.cpu_cores + ' cores' },
+      { label: 'RAM',         value: d.ram },
+      { label: 'STORAGE',     value: d.storage },
+      { label: 'ANDROID',     value: d.android },
+      { label: 'MIUI / OS',   value: d.miui || '—' },
+      { label: 'BOOTLOADER',  value: d.bootloader,
+        tagColor: d.bootloader === 'Unlocked' ? 'green' : 'red' },
+      { label: 'SELINUX',     value: d.selinux },
+      { label: 'SERIAL',      value: null, redacted: true },
+    ];
+
+    const grid = document.getElementById('device-info-grid');
+    grid.innerHTML = rows.map(r => `
+      <div class="info-row">
+        <span class="info-label">${r.label}</span>
+        <span class="info-value ${r.redacted ? 'mono' : ''}">
+          ${r.redacted
+            ? '<span class="redacted-bar" style="width:120px"></span>'
+            : (r.value || '—')}
+        </span>
+        ${r.tag
+          ? `<span class="tag ${r.tagColor || ''}">${r.tag}</span>`
+          : r.tagColor
+          ? `<span class="tag ${r.tagColor}">${r.value}</span>`
+          : ''}
+      </div>
+    `).join('');
+
+    content.style.display = 'block';
+    loaded.device = true;
+  }
+
+  // ── Drivers Tab ──────────────────────────────────────────────
+  async function loadDrivers() {
+    const loading = document.getElementById('drivers-loading');
+    const content = document.getElementById('drivers-content');
+
+    const data = await api('/api/drivers');
+    loading.style.display = 'none';
+
+    if (!data.success || !data.data?.length) {
+      document.getElementById('drivers-list').innerHTML =
+        '<div class="error-state"><div class="icon">📭</div><p>NO DRIVERS FOUND</p></div>';
+      content.style.display = 'block';
+      return;
+    }
+
+    const drivers = data.data;
+    document.getElementById('drivers-count').textContent =
+      drivers.length + ' drivers loaded';
+
+    document.getElementById('drivers-list').innerHTML =
+      drivers.map(d => `
+        <div class="driver-row">
+          <span class="status-dot ${d.status === 'loaded' ? 'connected' : ''}"></span>
+          <span class="driver-name">${d.name}</span>
+          <span class="tag gray">${d.category}</span>
+          <span class="driver-status ${d.status}">${d.status.toUpperCase()}</span>
+        </div>
+      `).join('');
+
+    content.style.display = 'block';
+    loaded.drivers = true;
+  }
+
+  // Driver backup button
+  document.getElementById('btn-backup-drivers').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-backup-drivers');
+    btn.disabled = true;
+    btn.textContent = 'CREATING BACKUP...';
+    // In final version: POST /api/drivers/backup
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'EXPORT BACKUP.ZIP';
+      alert('Driver backup feature coming in v0.2!');
+    }, 2000);
+  });
+
+  // ── Boot Tab ─────────────────────────────────────────────────
+  async function loadBoot() {
+    const loading = document.getElementById('boot-loading');
+    const content = document.getElementById('boot-content');
+
+    const data = await api('/api/dmesg');
+    loading.style.display = 'none';
+
+    if (!data.success) {
+      content.innerHTML = '<div class="error-state"><div class="icon">🔴</div><p>COULD NOT READ DMESG</p></div>';
+      content.style.display = 'block';
+      return;
+    }
+
+    // Parse dmesg for key events
+    const lines    = data.data.split('\n');
+    const events   = [];
+    const seen     = new Set();
+    const patterns = [
+      [/Booting Linux/i,            'Kernel Start'],
+      [/Linux version/i,            'Kernel Version'],
+      [/UEFI|abl/i,                 'ABL / UEFI'],
+      [/Qualcomm Technologies/i,    'QCom Platform'],
+      [/spmi_pmic/i,                'PMIC Init'],
+      [/qcom_rpmh|rpmh/i,           'RPMh'],
+      [/qcom-cpufreq/i,             'CPU Frequency'],
+      [/tlmm|pinctrl/i,             'GPIO / TLMM'],
+      [/regulator.*enabl/i,         'Regulators'],
+      [/simplefb|simple-fb|msm_drm/i,'Display'],
+      [/goodix|synaptics/i,         'Touchscreen'],
+      [/ath11k|wcn.*wifi/i,         'Wi-Fi'],
+      [/dwc3|xhci/i,                'USB'],
+      [/wcd|wsa|lpass/i,            'Audio'],
+    ];
+
+    for (const line of lines) {
+      const tsMatch = line.match(/\[\s*([\d.]+)\]/);
+      if (!tsMatch) continue;
+      const ts = parseFloat(tsMatch[1]);
+
+      for (const [pat, label] of patterns) {
+        if (seen.has(label)) continue;
+        if (pat.test(line)) {
+          const clean = line.replace(/\[\s*[\d.]+\]\s*/, '').trim().substring(0, 70);
+          events.push({ ts, label, detail: clean });
+          seen.add(label);
+          break;
+        }
+      }
+    }
+
+    events.sort((a, b) => a.ts - b.ts);
+
+    const totalMs   = events.length ? Math.round(events[events.length-1].ts * 1000) : 0;
+    const errorCount = lines.filter(l => /error:/i.test(l)).length;
+
+    document.getElementById('boot-total-time').textContent  = totalMs + 'ms';
+    document.getElementById('boot-event-count').textContent = events.length;
+    document.getElementById('boot-error-count').textContent = errorCount;
+
+    const base = events.length ? events[0].ts : 0;
+    document.getElementById('boot-timeline').innerHTML =
+      events.map(e => `
+        <div class="timeline-event">
+          <span class="timeline-time">+${Math.round((e.ts - base) * 1000)}ms</span>
+          <div class="timeline-dot"></div>
+          <div>
+            <div class="timeline-label">${e.label}</div>
+            <div class="timeline-detail">${e.detail}</div>
+          </div>
+        </div>
+      `).join('');
+
+    content.style.display = 'block';
+    loaded.boot = true;
+  }
+
+  // ── Partitions Tab ───────────────────────────────────────────
+  async function loadPartitions() {
+    const loading = document.getElementById('partitions-loading');
+    const content = document.getElementById('partitions-content');
+
+    const data = await api('/api/partitions');
+    loading.style.display = 'none';
+
+    if (!data.success || !data.data?.length) {
+      document.getElementById('partitions-list').innerHTML =
+        '<div class="error-state"><div class="icon">💾</div><p>NO PARTITIONS FOUND</p></div>';
+      content.style.display = 'block';
+      return;
+    }
+
+    const parts = data.data;
+    document.getElementById('partitions-count').textContent =
+      parts.length + ' PARTITIONS FOUND';
+
+    document.getElementById('partitions-list').innerHTML =
+      parts.map(p => `
+        <div class="partition-row">
+          <span class="partition-name">${p.name}</span>
+          <span class="partition-target">${p.target}</span>
+        </div>
+      `).join('');
+
+    content.style.display = 'block';
+    loaded.partitions = true;
+  }
+
+  // ── Terminal ─────────────────────────────────────────────────
+  const termOutput = document.getElementById('terminal-output');
+  const termInput  = document.getElementById('terminal-input');
+
+  function termPrint(text, cls = 'output') {
+    const div = document.createElement('div');
+    div.className = 'term-line ' + cls;
+    div.textContent = text;
+    termOutput.appendChild(div);
+    termOutput.scrollTop = termOutput.scrollHeight;
+  }
+
+  termInput.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter') return;
+    const cmd = termInput.value.trim();
+    if (!cmd) return;
+    termInput.value = '';
+    termPrint('$ ' + cmd, 'cmd');
+
+    const data = await api('/api/shell', 'POST', { command: cmd });
+    if (data.success) {
+      if (data.data.stdout) termPrint(data.data.stdout, 'output');
+      if (data.data.stderr) termPrint(data.data.stderr, 'error');
+    } else {
+      termPrint('Error: ' + (data.error || 'Unknown error'), 'error');
+    }
+  });
+
+  // ── Settings ─────────────────────────────────────────────────
+  function loadSettings() {
+    document.getElementById('settings-backend-status').textContent =
+      'http://localhost:9420 ✓';
+  }
+
+  async function reboot(mode) {
+    if (!confirm(`Reboot device (${mode})?`)) return;
+    await api('/api/reboot', 'POST', { mode });
+  }
+
+  function confirmWipe() {
+    if (!confirm('⚠️ This will wipe all data! Are you sure?')) return;
+    if (!confirm('⚠️ FINAL WARNING: All data will be lost!')) return;
+    alert('Wipe feature coming in v0.2!');
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  async function init() {
+    await pollDevices();
+    await loadDevice();
+    setInterval(pollDevices, 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>

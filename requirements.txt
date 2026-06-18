@@ -1,0 +1,9 @@
+# Redacted - Python Dependencies
+# Minimal dependencies - only what's truly needed
+
+# No external dependencies required for core functionality!
+# Python stdlib only: subprocess, http.server, json, threading, re, os
+
+# Optional: for future GUI embedding
+# pywebview>=4.0.0    # Native WebView window (replaces browser)
+# pyinstaller>=6.0.0  # For building .exe / binary
