@@ -1,7 +1,7 @@
 #  REDACTED
 ### Hardware Analysis Tool 
 
-> Analyze, inspect and back up your Android device hardware — no root, no account required.
+> Analyze, inspect and back up your Android device hardware
 
 ---
 
