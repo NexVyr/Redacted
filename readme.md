@@ -5,7 +5,7 @@
 
 ---
 
-## 📖 [**GUIDE**](./GUIDE.md)
+## 📖 [**GUIDE**](./How IT works)
 
 ---
 
