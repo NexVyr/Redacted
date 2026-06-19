@@ -4,11 +4,16 @@
 > Analyze, inspect and back up your Android device hardware
 
 ---
+
+## 📖 [**GUIDE ANSEHEN**](./GUIDE.md)
+
+---
+
 **Discord:**
 ```Browser
 https://discord.gg/MV4PZprXDB
 ```
-**Feel free to join. I’m happy to help if any issues or questions. I’m new here and look forward to any feedback. I’d be happy to see you in my Discord.**
+**Feel free to join. I'm happy to help if any issues or questions. I'm new here and look forward to any feedback. I'd be happy to see you in my Discord.**
 
 ## Quick Start
 
