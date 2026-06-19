@@ -1,0 +1,59 @@
+# 📖 Usage Guide
+
+## 🚀 Quick Start (Automated Setup)
+
+You do not need to download or clone this repository manually. Our setup scripts will automatically clone the project, check for requirements (like Python and ADB), and configure everything for you.
+
+### For Windows (PowerShell)
+Open PowerShell and run:
+```powershell
+irm https://githubusercontent.com | iex
+```
+
+### For Linux / Ubuntu (Bash)
+Open your terminal and run:
+```bash
+curl -sSL https://githubusercontent.com | bash
+```
+
+---
+
+## 📋 System Requirements
+
+To ensure the automated scripts and the Android analysis run smoothly, your system should meet the following requirements:
+
+### Operating System
+* **Windows:** Windows 10 or Windows 11 (with PowerShell 5.1 or higher)
+* **Linux:** Ubuntu 20.04 LTS / 22.04 LTS or any modern Debian-based distribution
+
+### Software & Dependencies
+*(Note: The automated setup scripts will attempt to install these for you if they are missing)*
+* **Python:** Version 3.8 or higher
+* **ADB:** Android Debug Bridge installed and added to your system's PATH
+* **Web Browser:** A modern browser (Chrome, Firefox, or Edge) to view the localhost dashboard
+
+### Android Device Compatibility
+* **Android OS:** Android 5.0 (Lollipop) up to the latest Android versions
+* **Permissions:** No root access required on the phone
+* **Hardware:** A working USB data cable (charging-only cables will not work)
+
+---
+
+## 📱 How to Prepare Your Android Device
+
+Before running the tool, you must enable USB Debugging on your device:
+
+1. Open **Settings** on your Android device.
+2. Go to **About phone** and tap **Build number** 7 times.
+3. Go back to **Settings** > **System** > **Developer options**.
+4. Turn on **USB debugging**.
+5. Connect your phone to your computer via USB cable.
+6. Look at your phone screen and tap **Allow USB debugging** when prompted.
+
+---
+
+## 📊 Viewing the Results
+
+You don't need to look for any files! 
+
+Once the analysis is complete, a local web server will spin up, and the interactive dashboard (`index.html`) will **automatically open in your default browser** via `localhost`. From there, you can instantly explore your hardware data, driver logs, and the visual boot timeline.
