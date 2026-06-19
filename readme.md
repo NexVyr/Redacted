@@ -5,7 +5,7 @@
 
 ---
 
-## 📖 [**GUIDE ANSEHEN**](./GUIDE.md)
+## 📖 [**GUIDE**](./GUIDE.md)
 
 ---
 
